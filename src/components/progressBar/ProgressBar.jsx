@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated, Easing } from 'react-native';
 
 const ProgressBar = ({ segments = 4, activeIndex = 0, onComplete }) => {
   const animationValues = useRef(
@@ -10,25 +10,31 @@ const ProgressBar = ({ segments = 4, activeIndex = 0, onComplete }) => {
     if (activeIndex < 0 || activeIndex >= segments) return;
 
     animationValues.forEach((value, index) => {
-      if (index !== activeIndex) value.setValue(0);
+      if (index === activeIndex) {
+        value.setValue(0); // Reset before animating
+        Animated.timing(value, {
+          toValue: 1,
+          duration: 5000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }).start();
+      } else if (index < activeIndex) {
+        Animated.timing(value, {
+          toValue: 1,
+          duration: 0,
+          useNativeDriver: false,
+        }).start();
+      } else {
+        value.setValue(0);
+      }
     });
 
-    Animated.timing(animationValues[activeIndex], {
-      toValue: 1,
-      duration: 5000,
-      useNativeDriver: false,
-    }).start();
-
     const timer = setTimeout(() => {
-      if (activeIndex < segments - 1) {
-        onComplete(activeIndex + 1);
-      } else {
-        onComplete(activeIndex);
-      }
+      onComplete(activeIndex < segments - 1 ? activeIndex + 1 : activeIndex);
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [activeIndex, animationValues, onComplete]);
+  }, [activeIndex, segments, onComplete]);
 
   return (
     <View style={styles.container}>
@@ -51,24 +57,21 @@ const ProgressBar = ({ segments = 4, activeIndex = 0, onComplete }) => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
     width: '30%',
-    alignSelf: 'flex-start',
     marginVertical: 20,
-    margin: 15,
-    marginTop: 30,
+    paddingLeft: 20,
   },
   segmentContainer: {
     flex: 1,
     height: 8,
     borderRadius: 4,
     overflow: 'hidden',
-    marginHorizontal: 2,
+    marginHorizontal: 4,
     position: 'relative',
   },
   segment: {
