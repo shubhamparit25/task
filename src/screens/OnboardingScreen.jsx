@@ -1,27 +1,73 @@
-import React from 'react';
-import {View, StyleSheet, Image, Text, useWindowDimensions} from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, StyleSheet, FlatList, Text, Image, Dimensions } from 'react-native';
 import Button from '../components/button/Button';
+import ProgressBar from '../components/progressBar/ProgressBar';
+
+const { width, height } = Dimensions.get('window');
+
+const slides = [
+  {
+    id: '1',
+    image: require('../assets/img/image1.png'),
+    title: 'Exclusive Gift Cards,\nBig Savings',
+    description: 'Access top brands with discounts on \nevery purchase.',
+  },
+  {
+    id: '2',
+    image: require('../assets/img/image1.png'),
+    title: 'Exclusive Gift Cards,\nBig Savings',
+    description: 'Access top brands with discounts on \nevery purchase.',
+  },
+  {
+    id: '3',
+    image: require('../assets/img/image1.png'),
+    title: 'Exclusive Gift Cards,\nBig Savings',
+    description: 'Access top brands with discounts on \nevery purchase.',
+  }
+];
 
 const OnboardingScreen = () => {
-  const {width, height} = useWindowDimensions();
+  const flatListRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handleScroll = (event) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / width);
+    setCurrentIndex(index);
+  };
+
+  const renderItem = ({ item }) => (
+    <View style={styles.slide}>
+      <Image source={item.image} style={styles.image} />
+      <Text style={styles.heading}>{item.title}</Text>
+      <Text style={styles.description}>{item.description}</Text>
+      <View style={styles.pixel_10_space}/>
+      <View style={styles.pixel_10_space}/>
+      <Button
+        title={currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
+        onPress={() => {
+          if (currentIndex < slides.length - 1) {
+            flatListRef.current.scrollToIndex({ index: currentIndex + 1 });
+          } else {
+            alert('Welcome!');
+          }
+        }}
+      />
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <View style={styles.pixel_10_space} />
-      <View style={styles.pixel_15_space} />
-      <Image
-        source={require('../assets/img/image1.png')}
-        style={[styles.image, {height: width * 0.93}]}
+      <ProgressBar segments={slides.length} activeIndex={currentIndex} />
+      <FlatList
+        data={slides}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
+        ref={flatListRef}
       />
-      <View style={styles.pixel_15_space} />
-      <Text style={styles.heading}>
-        Exclusive Gift Cards,{'\n'}Big Savings
-      </Text>
-      <Text style={styles.description}>
-        Access top brands with discounts on{'\n'}every purchase.
-      </Text>
-      <View style={styles.pixel_15_space} />
-      <Button title="Get Started" onPress={() => alert('Button Pressed')} />
     </View>
   );
 };
@@ -31,11 +77,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
+  },
+  slide: {
+    width,
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
   image: {
     width: '100%',
+    height: height * 0.48,
     resizeMode: 'contain',
     marginBottom: 20,
   },
@@ -51,15 +103,11 @@ const styles = StyleSheet.create({
     color: '#6A7178',
     textAlign: 'center',
     marginBottom: 20,
-    marginTop: 5,
     fontWeight: '500',
   },
   pixel_10_space: {
-    padding: 10,
-  },
-  pixel_15_space: {
-    padding: 15,
-  },
+  padding: 10,
+},
 });
 
 export default OnboardingScreen;
