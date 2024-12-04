@@ -1,21 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 
-const ProgressBar = ({ segments = 4, activeIndex = 0 }) => {
+const ProgressBar = ({ segments = 4, activeIndex = 0, onComplete }) => {
   const animationValues = useRef(
     Array.from({ length: segments }, () => new Animated.Value(0))
   ).current;
 
   useEffect(() => {
-    if (activeIndex < 0 || activeIndex >= segments) {
-      console.error('Invalid activeIndex:', activeIndex);
-      return;
-    }
+    if (activeIndex < 0 || activeIndex >= segments) return;
 
     animationValues.forEach((value, index) => {
-      if (index !== activeIndex) {
-        value.setValue(0);
-      }
+      if (index !== activeIndex) value.setValue(0);
     });
 
     Animated.timing(animationValues[activeIndex], {
@@ -23,7 +18,17 @@ const ProgressBar = ({ segments = 4, activeIndex = 0 }) => {
       duration: 5000,
       useNativeDriver: false,
     }).start();
-  }, [activeIndex, animationValues]);
+
+    const timer = setTimeout(() => {
+      if (activeIndex < segments - 1) {
+        onComplete(activeIndex + 1);
+      } else {
+        onComplete(activeIndex);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [activeIndex, animationValues, onComplete]);
 
   return (
     <View style={styles.container}>
@@ -50,18 +55,20 @@ const ProgressBar = ({ segments = 4, activeIndex = 0 }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    width: '80%',
-    alignSelf: 'center',
+    width: '30%',
+    alignSelf: 'flex-start',
     marginVertical: 20,
+    margin: 15,
+    marginTop: 30,
   },
   segmentContainer: {
     flex: 1,
     height: 8,
     borderRadius: 4,
     overflow: 'hidden',
-    marginHorizontal: 4,
+    marginHorizontal: 2,
     position: 'relative',
   },
   segment: {
